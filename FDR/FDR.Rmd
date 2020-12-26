@@ -1,0 +1,116 @@
+---
+title: "Assignment 9"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Prepared by: 
+
+  *   Josh Levine (jl2108)
+  *   Harsh Patel (hkp49)
+  *   Jaini Patel (jp1891) 
+  *   Yifan Liao (yl1463) 
+  *   Aayush Shah (avs93)
+
+# False Discovery Rate (FDR) #
+
+The FDR is known as the expected proportions of type I errors. A type I error is where we incorrectly reject the null hypothesis. FDR is closely related to FWER (family-wise error rate), the probability of making any type I error at all.
+
+### FDR Formula: ###
+
+FDR = E (V/R | R>0) P(R>0)
+
+  where:
+  
+    *   V = Number of Type I errors
+    *   R = Number of rejected hypotheses
+
+
+Below is the function for FDR implementation:
+```{r fdr function}
+false_discovery_rate <- function(p_values, Q){
+  
+  sorted_p_values = sort(p_values) #Sorting the p-values -> Step1
+
+  len = length(sorted_p_values)      #Number of p-values
+
+  #Hypothesis 1
+
+  hypothesis_1 = Q*c(1:len)/len
+
+  #Hypothesis 2 - If not independent
+
+  hep = len * sum(1/c(1:len))
+
+  hypothesis_2 = (Q * c(1:len))/hep
+
+  #the p-vlaues less than the hypothesis line are considered to be interesting
+
+  is_interesting_true = (sorted_p_values < hypothesis_1)
+   
+  #compute the index below which the sorted p-values are less than the line
+
+  threshold_index = max(which(is_interesting_true == "TRUE"))
+
+  print(paste0("The Threshold Index: ", threshold_index)) #The no. of TRUE values
+
+  p_star = sorted_p_values[threshold_index]
+
+  
+  hypothesis = c(1:len)
+
+  plot(hypothesis, sorted_p_values, col="black")
+
+  lines(c(1:threshold_index), sorted_p_values[c(1:threshold_index)],
+        col = "red", type="o")
+
+  lines(hypothesis, hypothesis_1, type="l", col="black")
+
+  
+  #list index of hypothesis which are interesting in the original unsorted list of p values
+
+  temp = (p_values < p_star)
+
+  fd = which(temp == "TRUE")
+
+  print("Index of intersting p values in the unsorted list:")
+
+  print(fd)
+
+  
+
+  #false rejection rate
+
+  frr = -log(p_star)/length(fd)
+
+  print(paste0("False Rejection Rate: ", frr))
+
+  
+
+  #################################################################################
+
+  # NOTE: FRR depends on the Q value given as an input to the function
+
+  # Here, the Q value was 0.05 hence the frr is approximately 0.05
+
+  #################################################################################
+
+}
+```
+
+
+Below is the code to call the fdr function:
+```{r }
+# Test Vector of p-values
+
+vec <- c(1e-5*runif(100),runif(900))
+
+Q = 0.05
+
+false_discovery_rate(vec, Q)
+```
