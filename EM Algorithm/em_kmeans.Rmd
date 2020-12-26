@@ -1,0 +1,275 @@
+---
+title : " Assignment 7: K-means Clustering using EM algorithm"
+output: 
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "C:/Users/Jaini Patel/Documents")
+```
+
+Prepared by: 
+
+  *   Josh Levine (jl2108)
+  *   Harsh Patel (hkp49)
+  *   Jaini Patel (jp1891) 
+  *   Yifan Liao (yl1463) 
+  *   Aayush Shah (avs93)
+
+
+## EM Algorithm ##
+
+The EM algorithm is used for obtaining maximum likelihood estimates of parameters when some of the data is missing. More generally, however, the EM algorithm can also be applied when there is unobserved data, which was never intended to be observed in the first place. In that case, we simply assume that the latent data is missing and proceed to apply the EM algorithm. The EM algorithm has many applications throughout statistics. It is often used for example, in machine learning and data mining applications, and in Bayesian statistics where it is often used to obtain the mode of the posterior marginal distributions of parameters.
+
+EM is an iterative algorithm with two linked steps:
+
+  *   E-step: fill-in hidden values using inference and
+  *   M-step: apply standard MLE method to completed data.
+
+EM algorithm always converges to a local optimum of the likelihood. It is mostly used for the multivariate distribution like Gaussian Mixture Models(GMM). A simple example of EM algorithm is K-means Clustering.
+
+## K-Means Clustering ##
+
+K-means is a centroid-based algorithm, or a distance-based algorithm, where we calculate the distances to assign a point to a cluster. In K-Means, each cluster is associated with a centroid. The main objective of the K-Means algorithm is to minimize the sum of distances between the points and their respective cluster centroid.
+
+### Steps to perform k-means clustering ###
+
+  1)    Choose the number of clusters k. (no. of means k)
+  2)    Select k random points from the data as centroids/means.
+  3)    Assign all the points in the data to the closest cluster centroid.
+  4)    Compute the centroids of the newly formed clusters.
+  5)    Repeat step 3 and 4.
+  
+### Stopping Criteria for K-Means Clustering ###
+
+There are essentially three stopping criteria that can be adopted to stop the K-means algorithm:
+
+  1)    Centroids/mean of newly formed clusters do not change.
+  2)    Points remain in the same cluster.
+  3)    Maximum number of iterations are reached.
+  
+We can stop the algorithm if the centroids of newly formed clusters are not changing. Even after multiple iterations, if we are getting the same centroids for all the clusters, we can say that the algorithm is not learning any new pattern and it is a sign to stop the training.
+
+Another clear sign that we should stop the training process if the points remain in the same cluster even after training the algorithm for multiple iterations.
+
+### DUNN Index ###
+
+Dunn Index shows the goodness of fitness of clustering. Dunn index is the ratio of the minimum of inter-cluster distances and maximum of intracluster distances.
+
+  *   Minimun Inter-cluster Distances, the distance between even the closest clusters should be more which will eventually make sure that the clusters are far away from each other.
+  *   Maximum Intra-cluster Distances, the maximum distance between the cluster centroids and the points should be minimum which will eventually make sure that the clusters are compact.
+  
+$${DunnIndex = min(Inter-Cluster Distance)/max(Intra-cluster Distance)}$$
+
+The values of the Dunn index have to be maximized because we want to maximize minimum the distance between two clusters and minimize the maximum distance (or spread) within the cluster. Once the algorithm converges, the cluster assignment remains constant and hence the Dunn value gets stable.With each iteration, the value of the Dunn index should increase as we are making our clusters better and better. This can be observed from the Dunn index calculated at each iteration for the k-means algorithm.
+
+
+### Below are the code chunks and corresponding outputs of the functions used to perform k means clustering ###
+
+
+"init" function assigns cluster value to each data value.
+```{r Initializing clusters}
+library(MASS)
+library(ggplot2)
+library(tidyverse)
+library(matlib) #for matrix function
+
+
+#  assign clusters to each data point.
+init <- function(data, k){
+  n = nrow(data)
+  clusters = rep(1:k, length.out = n, replace = TRUE)
+  data = cbind(data, clusters)
+  return(data)
+}
+```
+
+
+"parameters" function calculates the parameters (mean and variance) of all the clusters, based on the data points assigned to each cluster.
+```{r recalculating the centroid/means and the covariance of all the clusters, based on the points assigned to them}
+
+parameters <- function(data, k){
+  features = ncol(data)-1
+  #taking mean feature wise
+  mean = aggregate(data, by = list(data$clusters), mean, na.rm = TRUE)
+  cov_list <- lapply(sort(unique(data$clusters)), 
+                     function(x) 
+                       cov(data[data$clusters==x,-(features+1)],use="na.or.complete"))
+ 
+  return(list(mean = mean[-1], cov_list = cov_list ))
+}
+```
+
+"euclidean_distance" finds the Euclidean distance between two points.
+```{r euclidean distance}
+
+euclidean_distance <- function(x1, x2){
+  return(sqrt(sum((x1 - x2) ^ 2)))
+}
+  
+```
+
+
+"assign_euclidean" function re-assigns the clusters to each data point based on the euclidean distance of the point from the cluster centroid.
+```{r re-assigning clusters}
+
+#re-assign cluster based on the euclidean distance from the cluster mean
+assign_euclidean <- function(data, clustered_list){
+  
+  n = nrow(data)
+  features = ncol(data)-1
+  
+  for(i in c(1:n)){
+    min_dist = +Inf
+    for( j in  unique(data$clusters) ){
+        mean = clustered_list$mean[j,-(features+1)]
+        euc_distance = euclidean_distance(data[i,-ncol(data)], mean )
+        if(euc_distance < min_dist){
+          min_dist = euc_distance
+          #assign the cluster with min distance from the data point
+          data[i,]$clusters = j
+         }
+      }
+    }
+  return(data)
+}
+```
+
+
+
+"plot" function plots a scatter plot showing relation between any two features of data.
+```{r 2D plots of any two features}
+plot<- function(data){
+  print(data %>%  
+          ggplot(aes(data[,1],data[,2], color = as.factor(clusters))) + 
+          geom_point() +
+          scale_color_manual(
+            values=c("red", "blue", "green")))
+}
+```
+
+
+Below are few functions used to find intracluster distance, intercluster distance and dunn index.
+```{r calculating DUNN Index}
+
+intracluster_dist <- function(cluster_mean, cluster_data){
+  n = nrow(cluster_data)
+  max = 0
+  for (i in c(1:n)){
+    euc_distance = euclidean_distance(cluster_mean, cluster_data[i,])
+    if(euc_distance>max){
+      max = euc_distance
+    }
+  }
+  return(max)
+}
+
+get_max_intracluster_distance <- function(data, mean){
+  features = ncol(data)-1
+  for (i in c(1:k)){
+    t = lapply(sort(unique(data$clusters)), 
+               function(x) 
+                 intracluster_dist(mean[x,],data[data$clusters==x,-(features+1)]))
+  }
+  
+  return(max(unlist(t)))
+}
+
+get_min_intercluster_distance <- function(mean, k){
+  min = +Inf
+  for (i in c(1:(k-1))){
+    for (j in c((i+1):k)){
+      euc_distance = euclidean_distance(mean[i,], mean[j,])
+      if(euc_distance<min){
+        min = euc_distance
+      }
+    }
+  }
+  return(min)
+}
+
+dunn_index <- function(data, mean, k){
+  features = ncol(data)
+  
+  min_intercluster_distance = get_min_intercluster_distance(mean[-features], k)
+  max_intracluster_distance = get_max_intracluster_distance(data, mean[-features])
+  return(min_intercluster_distance/max_intracluster_distance)
+}
+
+```
+
+"k_means" function is the function that computes the k_means clustering on the data points.
+```{r k means function}
+k_means <- function(data, k){
+  data = init(data, k)
+  data_cluster = data
+  plot(data)
+  features = ncol(data_cluster)
+
+  #convergence of dunn index 
+  prev_dunn_index = 0
+  difference = 1
+  n_steps = 1
+  
+  # stop when dunn index becomes constant
+  while(difference!=0){
+    print(paste(n_steps))
+    #clustered_list contains the cluster parameters of mean and covariance for each cluster 
+    clustered_list = parameters(data, k)
+    #new column of 'clusters' gets appended 
+    data = assign_euclidean(data,clustered_list )
+  
+    new_dunn_index = dunn_index(data, clustered_list$mean[-(features)], k)
+    print(new_dunn_index)
+    plot(data)
+    difference = abs(new_dunn_index - prev_dunn_index)
+    prev_dunn_index = new_dunn_index
+    n_steps = n_steps + 1
+  }
+  
+  return(list(data = data, clustered_list = clustered_list))
+}
+```
+
+
+
+Below are the codes to simulate the above mentioned functions and the plots used to visualize the pair-pair plots.
+```{r}
+df <- read.csv("kmeans.csv")
+data = data.frame(df)
+
+#cols = c(1:5) 
+#rows = 1:nrow(df)
+#data = df[rows,cols] #to convert csv into dataframe
+
+k = 3 #number of clusters to be made.number of means.
+
+output = k_means(data, k)#gives dunn index after each iteration and the iterated clusters.
+
+clustered_data = output$data
+parameters = output$clustered_list
+
+print(parameters) #prints mean and covariance matrix for clusters.
+
+
+#visualization with pair-pair plot.
+features = ncol(clustered_data)
+with(clustered_data[-(features)], 
+     pairs(clustered_data[-(features)], col=clustered_data$clusters))
+
+#Density comparison of each feature
+print(clustered_data %>% 
+  group_by(clusters) %>% 
+  ggplot(aes(x = c,  fill = as.factor(clusters))) +
+  geom_density( alpha = 0.35) +
+  theme_bw())
+
+
+```
+
+
+
+

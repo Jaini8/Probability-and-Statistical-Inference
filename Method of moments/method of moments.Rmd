@@ -1,0 +1,642 @@
+---
+title: "<center>Method Of Moments</center>"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "C:/Users/Jaini Patel/Documents")
+```
+
+<center><table><tr><th>&nbsp;&nbsp;&nbsp; Josh Levine &nbsp;&nbsp;&nbsp;</th> <th>&nbsp;&nbsp;&nbsp; Harsh Patel &nbsp;&nbsp;&nbsp;</th> <th>&nbsp;&nbsp;&nbsp; Jaini Patel &nbsp;&nbsp;&nbsp;</th> <th>&nbsp;&nbsp;&nbsp; Yifan Liao &nbsp;&nbsp;&nbsp;</th> <th>&nbsp;&nbsp;&nbsp; Aayush Shah &nbsp;&nbsp;&nbsp;</th></tr><tr><th>jl2108</th><th>hkp49</th><th>jp1891</th><th>yl1463</th><th>avs93</th></tr></table></center>
+
+<br><br>
+
+<h3><center>What is Method of Moments?</h3></center><br><br>
+In statistics, the method of moments is a method of estimation of population parameters such as mean, variance, median, etc. (which need not be moments), by equating sample moments with theoretical moments and then solving those equations for the quantities to be estimated. <br>
+Here are some definitions of theoretical moments: <br><br>
+&nbsp;&nbsp;&nbsp; 1)	${E(X^k)}$ is the ${k^{th}}$ (theoretical) moment of the distribution (about the origin), for ${k=1, 2, \ldots}$ <br>
+&nbsp;&nbsp;&nbsp; 2)	${E\left[(X-\mu)^k\right]}$ is the ${k^{th}}$ (theoretical) moment of the distribution (about the mean), for ${k=1, 2, \ldots}$ <br>
+&nbsp;&nbsp;&nbsp; 3)	${M_k=\frac{1}{n}\sum\limits_{i=1}^n X_i^k}$ is the ${{k^{th}}}$ sample moment, for ${k=1, 2, \ldots}$ <br>
+&nbsp;&nbsp;&nbsp; 4)	${{M_k^\ast =\frac{1}{n}\sum\limits_{i=1}^n (X_i-\bar{X})^k}}$ is the ${{k^{th}}}$ sample moment about the mean, for ${k=1, 2, \ldots}$ <br><br>
+
+<h3><center>The basic steps to find these moments are:</h3></center><br>
+&nbsp;&nbsp;&nbsp; 1)	Equate the first sample moment about the origin ${{M_1=\frac{1}{n}\sum\limits_{i=1}^n X_i=\bar{X}}}$ to the first theoretical moment ${E(X)}$ <br>
+&nbsp;&nbsp;&nbsp; 2)	Equate the second sample moment about the origin ${M_2=\frac{1}{n}\sum\limits_{i=1}^n X_i^2}$ to the second theoretical moment ${E(X^2)}$ <br>
+&nbsp;&nbsp;&nbsp; 3)	Continue equating sample moments about the origin, ${M_k}$, with the corresponding theoretical moments &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${E(X^k), \; k=3, 4, \ldots}$ until you have as many equations as you have parameters. <br>
+&nbsp;&nbsp;&nbsp; 4)	Solve for the parameters. <br>
+
+The resulting values are called method of moments estimators.
+
+\pagebreak
+
+The table shows the estimated parameters values found using method of moments estimator for a given distribution. The estimated parameters for distributions having two parameters, can be obtained by solving the equations obtained by solving the theoretical mean and the theoretical variance with the sample mean and sample variance, respectively and these estimated parameters are further determined as first and second moment about the sample mean.
+
+<table border='1' style='width:100%'>
+  <tr>
+    <th>Distribution</th>
+    <th>Actual Parameter 1</th>
+    <th>Actual Parameter 2</th>
+    <th>Estimated Parameter 1</th>
+    <th>Esitmated Parameter 2</th>
+  </tr>
+  <tr>
+    <th> Point Mass at ${{a}}$ </th> 
+    <th> ${{a}}$ </th> 
+    <th> ${0}$ </th> 
+    <th> ${\hat{a}}$ = ${\hat\mu}$ </th> 
+    <th> N/A </th> 
+  </tr>
+  <tr>
+    <th> Bernoulli (${{p}}$) </th> 
+    <th> ${{p}}$ </th> 
+    <th> ${{p(1-p)}}$ </th> 
+    <th> ${\hat{p}}$ = ${\hat\mu}$ </th> 
+    <th> N/A </th> 
+ </tr>
+ <tr>
+    <th> Binomial(${{n,p}}$) </th> 
+    <th> ${{np}}$ </th> 
+    <th> ${{np(1-p)}}$ </th> 
+    <th> ${\hat{n}}$ = ${{{\hat\mu}^2}/({\hat\mu} - {\hat\sigma^2})}$ </th> 
+    <th> ${\hat{p}}$ = ${1 - ({\hat\sigma^2}/{\hat\mu})}$ </th> 
+ </tr>
+ <tr>
+    <th> Geometric(${{p}}$) </th> 
+    <th> ${1/p}$ </th> 
+    <th> ${(1-p)/{p^2}}$ </th> 
+    <th> ${\hat{p}}$ = ${1/{\hat\mu}}$ </th> 
+    <th> N/A </th> 
+ </tr>
+ <tr>
+    <th> Poisson(${\lambda}$) </th> 
+    <th> ${\lambda}$ </th> 
+    <th> ${\lambda}$ </th> 
+    <th> ${\hat\lambda}$ = ${\hat\mu}$ </th> 
+    <th> N/A </th> 
+ </tr>
+ <tr>
+    <th> Uniform(${{a,b}}$) </th> 
+    <th> ${(a+b)/2}$ </th> 
+    <th> ${{(b-a)^2}/12}$ </th> 
+    <th> ${\hat{a}}$ = ${{\hat\mu} - {\sqrt{3{\hat\sigma^2}}}}$ </th> 
+    <th> ${\hat{b}}$ = ${{\hat\mu} + {\sqrt{3{\hat\sigma^2}}}}$ </th> 
+ </tr>
+ <tr>
+    <th> Normal(${\mu,\sigma^2}$) </th> 
+    <th> ${\mu}$ </th> 
+    <th> ${\sigma^2}$ </th> 
+    <th> ${{\hat\mu_0}}$ = ${\hat\mu}$ </th> 
+    <th> ${{\hat\sigma_0}^2}$ = ${\hat\sigma^2}$ </th> 
+ </tr>
+ <tr>
+    <th> Exponential(${\beta}$) </th> 
+    <th> ${\beta}$ </th> 
+    <th> ${\beta^2}$ </th> 
+    <th> ${\hat\beta}$ = ${1/{\hat\mu}}$ </th> 
+    <th> N/A </th> 
+ </tr>
+ <tr>
+    <th> Gamma(${\alpha, \beta}$) </th> 
+    <th> ${\alpha\beta}$ </th> 
+    <th> ${\alpha{\beta^2}}$ </th> 
+    <th> ${\hat\alpha}$ = ${{\hat\mu^2}/{\hat\sigma^2}}$ </th> 
+    <th> ${\hat\beta}$ = ${{\hat\sigma^2}/{\hat\mu}}$ </th> 
+ </tr>
+ <tr>
+    <th> Beta(${\alpha, \beta}$) </th> 
+    <th> ${{\alpha}/{\alpha + \beta}}$ </th> 
+    <th> ${{\alpha\beta}/{(\alpha + \beta)^2 (\alpha +\beta +1)}}$ </th> 
+    <th> ${\hat\alpha}$ = ${{\hat\mu}[{{\hat\mu(1-\hat\mu)}/{\hat\sigma^2}} - 1] }$ </th> 
+    <th> ${\hat\beta}$ = ${{(1-{\hat\mu})}[{{\hat\mu(1-\hat\mu)}/{\hat\sigma^2}} - 1] }$ </th> 
+ </tr>
+ <tr>
+    <th> ${t_v}$ </th> 
+    <th> ${0 (if {v} \geq 1)}$ </th> 
+    <th> ${{{v}/{(v-2)}} (if v > 2) }$ </th> 
+    <th> ${\hat{v}}$ = ${2t/(1-t)}$</th> 
+    <th></th> 
+ </tr>
+ <tr>
+    <th> Chi-Square(p) </th> 
+    <th> ${{p}}$ </th> 
+    <th> ${{2p}}$ </th> 
+    <th> ${\hat{p}}$ = ${\hat\mu}$ </th> 
+    <th> N/A </th> 
+ </tr>
+ <tr>
+    <th> Multinomial(${{n,p}}$) </th> 
+    <th> ${{np}}$ </th> 
+    <th></th> 
+    <th></th> 
+    <th></th> 
+ </tr>
+ <tr>
+    <th> Multivariate Normal(${\mu,\sum}$) </th> 
+    <th> ${\mu}$ </th> 
+    <th> ${\sum}$ </th> 
+    <th></th> 
+    <th></th> 
+ </tr>
+</table>
+
+\pagebreak
+
+<h3><center>Method of Moments Function used to call each distribution </center></h3>
+
+Here, is the code that we have implemented in order to calculate first and second moment for various distributions, on a sample size of 1000. firstMoment and secondMoment are the functions to compute first and second moment for the given distribution on a sample space. methodOfMoment is the function that computes the estimated parameters with the help of given parameters
+```
+# Compute 1st moment for the sample around origin to get Sample_Mean
+firstMoment <- function(vec){
+  sum = sum(vec, na.rm=TRUE)
+  return (sum/length(vec))
+}
+
+# Compute 2nd moment for the sample around the sample mean to get Sample_Variance
+secondMoment <- function(vec){
+  mu = firstMoment(vec)
+  square <- sum((vec - mu)^2, na.rm=TRUE)
+  return (square/length(vec))
+}
+
+methodOfMoment <- function(n, distribution){
+  
+  cat(paste("The distribution is:", distribution ,"\n" ))    
+  
+  if(distribution == "point"){
+  	vec = n
+  	a_hat = point(vec)
+  	print(paste0("Estimated parameter:", "a_hat = ", a_hat))
+	
+  }
+  
+  if( distribution == "bernoulli" ){
+    p = 0.4
+    vec = rbern(n, p)
+    p_hat = bernoulli(vec)
+    print(paste0("Population Parameter:   ", "p = ", p))
+    print(paste0("Estimated parameter:", "p_hat = ", round(p_hat,3) ))
+  }
+
+  if( distribution == "binomial" ){
+    n_ = 50
+    p = 0.6
+    vec = rbinom(n, n_, p) 
+    l = binomial(vec)
+    print(paste0("Population Parameters:    ", "n_ = ", n_, "             p = ", p))
+    print(paste0("Estimated parameters: ", "n_hat = ",round(l$n_hat,3) , "      p_hat = ", round(l$p_hat,3)) )
+  }
+```
+
+```
+if( distribution == "geometric" ){
+    p = 0.8
+    vec = rgeom(n, p)
+    p_hat = geometric(vec)
+    print(paste0("Population Parameter:   ", "p = ", p))
+    print(paste0("Estimated parameter:", "p_hat = ",round(p_hat,3) ))
+  }
+  
+ if( distribution == "poisson" ){
+    lambda = 0.2
+    vec = rpois(n, lambda)
+    lambda_hat = poisson(vec)
+    print(paste0("Population Parameter:   ", "lambda = ", lambda))
+    print(paste0("Estimated parameter:", "lambda_hat = ",round(lambda_hat,3) ))
+  }
+  
+ if( distribution == "uniform" ){
+    a = 10
+    b = 30
+    vec = runif(n, a, b) 
+    l = uniform(vec)
+    print(paste0("Population Parameters:    ", "a = ", a, "               b = ", b))
+    print(paste0("Estimated parameters: ", "a_hat = ",round(l$a_hat,3), "      b_hat = ", round(l$b_hat,3) ) )
+  }
+  
+  if( distribution == "normal" ){
+    mu = 20
+    sd = 16
+    vec = rnorm(n, mu, sd) 
+    l = normal(vec)
+    print(paste0("Population Parameters:    ", "mu = ", mu, "              sd = ", sd))
+    print(paste0("Estimated parameters: ", "mu_hat = ",round(l$mu_hat,3), "      sd_hat = ", round(l$sd_hat,3) ) )
+  }
+if( distribution == "exponential" ){
+    beta = 20
+    vec = rexp(n, beta)
+    beta_hat = exponential(vec)
+    print(paste0("Population Parameter:   ", "beta = ", beta))
+    print(paste0("Estimated parameter:", "beta_hat = ",round(beta_hat,3) ))
+  }
+    
+  if( distribution == "gamma" ){
+    alpha = 3
+    beta = 0.5
+    vec = rgamma(n, alpha, scale = beta) 
+    l = gamma(vec)
+    print(paste0("Population Parameters:    ", "alpha = ", alpha, "               beta = ", beta))
+    print(paste0("Estimated parameters: ", "alpha_hat = ",round(l$alpha_hat,3), "      beta_hat = ", round(l$beta_hat,3) ) )
+  }
+```
+
+```
+if( distribution == "beta" ){
+    alpha = 4
+    beta = 10
+    vec = rbeta(n, alpha, beta) 
+    l = beta(vec)
+    print(paste0("Population Parameters:    ", "alpha = ", alpha, "               beta = ", beta))
+    print(paste0("Estimated parameters: ", "alpha_hat = ",round(l$alpha_hat,3), "      beta_hat = ", round(l$beta_hat,3) ) )
+  }
+  
+ if( distribution == "t" ){
+    v = 10
+    vec = rt(n, df = v)
+    v_hat = t(vec)
+    print(paste0("Population Parameter:   ", "v = ", v))
+    print(paste0("Estimated parameter:", "v_hat = ",round(v_hat,3) ))
+  }
+
+if( distribution == "chi_squared" ){
+    p = 5
+    vec = rchisq(n, p)
+    p_hat = chi_squared(vec)
+    print(paste0("Population Parameter:   ", "p = ", p))
+    print(paste0("Estimated parameter:", "p_hat = ",round(p_hat,3) ))
+  } 
+  
+  if(distribution == "multinomial"){
+    p = c(0.15,0.05,0.4,0.1,0.3)
+    input_data = rmultinom(10000,size=5,p)
+    a = nrow(input_data)
+    print(paste0("Population parameters: ", "p  = ", p, " a = ", a))
+    print("Multinomial distribution has following estimated parameters: ")
+    sample_data = input_data
+    estimator <- multinomial(sample_data)
+    print(estimator)
+  }
+  
+  if(distribution == "multivariate_normal"){
+    vari = c(10,3,3,2)
+    sigma = matrix(vari,2,2)
+    input_data = mvrnorm(n = 1000, rep(0, 2), sigma)  
+    print("Population parameter: ")
+    print(vari)
+    print("Multinormal distribution has following estimated parameters")
+    sample_data = input_data
+    estimator <- multivariate_normal(sample_data)
+    print(estimator)
+  }
+      
+  cat("\n")
+```
+\pagebreak
+
+```{r echo=FALSE, error=FALSE, message=FALSE}
+library(Rlab)
+library(MASS)
+
+methodOfMoment <- function(n, distribution){
+  
+  cat(paste("The distribution is:", distribution ,"\n" ))    
+  
+  if(distribution == "point"){
+  	vec = n
+  	a_hat = point(vec)
+  	print(paste0("Estimated parameter:", "a_hat = ", a_hat))
+	
+  }
+  
+  if( distribution == "bernoulli" ){
+    p = 0.4
+    vec = rbern(n, p)
+    p_hat = bernoulli(vec)
+    print(paste0("Population Parameter:   ", "p = ", p))
+    print(paste0("Estimated parameter:", " p_hat = ", round(p_hat,3) ))
+  }
+
+  if( distribution == "binomial" ){
+    n_ = 50
+    p = 0.6
+    vec = rbinom(n, n_, p) 
+    l = binomial(vec)
+    print(paste0("Population Parameters:    ", "n_ = ", n_, "             p = ", p))
+    print(paste0("Estimated parameters: ", "n_hat = ",round(l$n_hat,3) , "      p_hat = ", round(l$p_hat,3)) )
+  }
+
+  if( distribution == "geometric" ){
+    p = 0.8
+    vec = rgeom(n, p)
+    p_hat = geometric(vec)
+    print(paste0("Population Parameter:   ", "p = ", p))
+    print(paste0("Estimated parameter:", "p_hat = ",round(p_hat,3) ))
+  }
+  
+  if( distribution == "poisson" ){
+    lambda = 0.2
+    vec = rpois(n, lambda)
+    lambda_hat = poisson(vec)
+    print(paste0("Population Parameter:   ", "lambda = ", lambda))
+    print(paste0("Estimated parameter:", "lambda_hat = ",round(lambda_hat,3) ))
+  }
+  
+  if( distribution == "uniform" ){
+    a = 10
+    b = 30
+    vec = runif(n, a, b) 
+    l = uniform(vec)
+    print(paste0("Population Parameters:    ", "a = ", a, "               b = ", b))
+    print(paste0("Estimated parameters: ", "a_hat = ",round(l$a_hat,3), "      b_hat = ", round(l$b_hat,3) ) )
+  }
+  
+  if( distribution == "normal" ){
+    mu = 20
+    sd = 16
+    vec = rnorm(n, mu, sd) 
+    l = normal(vec)
+    print(paste0("Population Parameters:    ", "mu = ", mu, "              sd = ", sd))
+    print(paste0("Estimated parameters: ", "mu_hat = ",round(l$mu_hat,3), "      sd_hat = ", round(l$sd_hat,3) ) )
+  }
+   
+  if( distribution == "exponential" ){
+    beta = 20
+    vec = rexp(n, beta)
+    beta_hat = exponential(vec)
+    print(paste0("Population Parameter:   ", "beta = ", beta))
+    print(paste0("Estimated parameter:", "beta_hat = ",round(beta_hat,3) ))
+  }
+    
+  if( distribution == "gamma" ){
+    alpha = 3
+    beta = 0.5
+    vec = rgamma(n, alpha, scale = beta) 
+    l = gamma(vec)
+    print(paste0("Population Parameters:    ", "alpha = ", alpha, "               beta = ", beta))
+    print(paste0("Estimated parameters: ", "alpha_hat = ",round(l$alpha_hat,3), "      beta_hat = ", round(l$beta_hat,3) ) )
+  }
+  
+  if( distribution == "beta" ){
+    alpha = 4
+    beta = 10
+    vec = rbeta(n, alpha, beta) 
+    l = beta(vec)
+    print(paste0("Population Parameters:    ", "alpha = ", alpha, "               beta = ", beta))
+    print(paste0("Estimated parameters: ", "alpha_hat = ",round(l$alpha_hat,3), "      beta_hat = ", round(l$beta_hat,3) ) )
+  }
+ 
+  if( distribution == "t" ){
+    v = 10
+    vec = rt(n, df = v)
+    v_hat = t(vec)
+    print(paste0("Population Parameter:   ", "v = ", v))
+    print(paste0("Estimated parameter:", "v_hat = ",round(v_hat,3) ))
+  }
+   
+  if( distribution == "chi_squared" ){
+    p = 5
+    vec = rchisq(n, p)
+    p_hat = chi_squared(vec)
+    print(paste0("Population Parameter:   ", "p = ", p))
+    print(paste0("Estimated parameter:", "p_hat = ",round(p_hat,3) ))
+  } 
+  
+  if(distribution == "multinomial"){
+    p = c(0.15,0.05,0.4,0.1,0.3)
+    input_data = rmultinom(10000,size=5,p)
+    a = nrow(input_data)
+    print(paste0("Population parameters: ", "p  = ", p, " a = ", a))
+    print("Multinomial distribution has following estimated parameters: ")
+    sample_data = input_data
+    estimator <- multinomial(sample_data)
+    print(estimator)
+  }
+  
+  if(distribution == "multivariate_normal"){
+    vari = c(10,3,3,2)
+    sigma = matrix(vari,2,2)
+    input_data = mvrnorm(n = 1000, rep(0, 2), sigma)  
+    print("Population parameter: ")
+    print(vari)
+    print("Multinormal distribution has following estimated parameters")
+    sample_data = input_data
+    estimator <- multivariate_normal(sample_data)
+    print(estimator)
+  }
+      
+  cat("\n")
+}
+
+library(Rlab)
+
+# Calculating first and second moments of a vector
+
+# Compute 1st moment for the sample around origin to get Sample_Mean
+firstMoment <- function(vec){
+  sum = sum(vec, na.rm=TRUE)
+  return (sum/length(vec))
+}
+
+# Compute 2nd moment for the sample around the sample mean to get Sample_Variance
+secondMoment <- function(vec){
+  mu = firstMoment(vec)
+  square <- sum((vec - mu)^2, na.rm=TRUE)
+  return (square/length(vec))
+}
+```
+
+<h2>Below are the functions to compute the outputs and the outputs for each distributions on a sample space of size 1000.</h2>
+
+<h2><center> Point Mass </center></h2>
+```{r}
+# Point Distribution
+point <- function(vec){
+  # Estimating the parameters 
+  a_hat = firstMoment(vec)
+  return(a_hat)
+}
+
+methodOfMoment(1000, "point")
+```
+
+<h2><center> Bernoulli </center></h2>
+```{r}
+bernoulli <- function(vec){ 
+  p_hat = firstMoment(vec)
+  return(p_hat)
+}
+
+methodOfMoment(1000, "bernoulli")
+```
+
+<h2><center> Binomial </center></h2>
+```{r}
+binomial <- function(vec){  
+  mu = firstMoment(vec)
+  var = secondMoment(vec)
+  
+  p_hat = 1 - (var/mu)
+  n_hat = mu/p_hat
+  
+  list(n_hat = n_hat, p_hat = p_hat)
+}
+
+methodOfMoment(1000, "binomial")
+```
+
+<h2><center> Geometric </center></h2>
+```{r}
+geometric <- function(vec){
+  p_hat = 1/firstMoment(vec) - 1
+  return(p_hat)
+}
+
+methodOfMoment(1000, "geometric")
+```
+
+<h2><center> Poisson </center></h2>
+```{r}
+poisson <- function(vec){
+  lambda_hat = firstMoment(vec)
+  return(lambda_hat)
+}
+
+methodOfMoment(1000, "poisson")
+```
+
+<h2><center> Uniform </center></h2>
+```{r}
+uniform <- function(vec){
+  mu = firstMoment(vec)
+  var = secondMoment(vec)
+  hold = var*sqrt(3)
+  
+  a_hat = mu - hold
+  b_hat = mu + hold
+  
+  list(a_hat = a_hat, b_hat = b_hat)
+}
+
+methodOfMoment(1000, "uniform")
+```
+
+<h2><center> Normal </center></h2>
+```{r}
+normal <- function(vec){ 
+  mu_hat = firstMoment(vec)
+  sd_hat = sqrt(secondMoment(vec))
+  
+ list(mu_hat = mu_hat, sd_hat = sd_hat)  
+}
+
+methodOfMoment(1000, "normal")
+```
+
+<h2><center> Exponential </center></h2>
+```{r}
+exponential <- function(vec){
+  beta_hat = 1/firstMoment(vec)
+  return(beta_hat)
+}
+
+methodOfMoment(1000, "exponential")
+```
+
+<h2><center> Gamma </center></h2>
+```{r}
+gamma <- function(vec){  
+  mu = firstMoment(vec)
+  var = secondMoment(vec)
+  
+  alpha_hat = (mu^2)/(var^2)
+  beta_hat = (var^2)/mu
+  
+  list(alpha_hat = alpha_hat, beta_hat = beta_hat)
+}
+
+methodOfMoment(1000, "gamma")
+```
+
+<h2><center> Beta </center></h2>
+```{r}
+beta <- function(vec){
+  mu = firstMoment(vec)
+  var = secondMoment(vec)
+  hold = (mu*(1-mu)/var) - 1
+  
+  alpha_hat = mu * hold
+  beta_hat = (1-mu) * hold
+  
+  list(alpha_hat = alpha_hat, beta_hat = beta_hat)
+}
+
+methodOfMoment(1000, "beta")
+```
+
+<h2><center> t </center></h2>
+```{r}
+t <- function(vec){
+  mu = firstMoment(vec)
+  if(mu != 0){
+	v_hat = 2*mu/(mu-1)
+    return(v_hat)
+	}
+  else{   
+    return(0)
+  }   
+}
+
+methodOfMoment(1000, "t")
+```
+
+<h2><center> Chi Squared </center></h2>
+```{r}
+chi_squared <- function(vec){
+  p_hat = firstMoment(vec)
+  return(p_hat)
+}
+
+methodOfMoment(1000, "chi_squared")
+```
+
+<h2><center> Multinomial </center></h2>
+```{r}
+multinomial <- function(vec){
+  a = nrow(vec)
+  p = c(0,0,0,0,0)
+  for(i in 1:a)
+    p[i]<-1-((var(vec[i,]))/mean(vec[i,]))
+  n = sum(rowMeans(vec))/sum(p[1:a])
+  return (n)
+}
+
+methodOfMoment(1000, "multinomial")
+```
+
+<h2><center> Multivariate Normal </center></h2>
+```{r}
+multivariate_normal <- function(vec){
+  mu_hat = colMeans(vec)
+  summation = var(vec)
+  print("For Multinormal Distribution the parameter mu_hat is")
+  print(mu_hat)
+  print("The parameter summation is ")
+  print(summation)
+}
+
+methodOfMoment(1000, "multivariate_normal")
+```
+
+\pagebreak
+
+<b>Conclusion:</b>
+
+<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+
+From our output results, we can say that the estimated values using the method of moment estimator is quite consistent for most of the probability distributions with at most two parameters (when the sample size is 1000). Our estimator accurately estimated the parameter values with an error of ~0.5, which is not a small value. We can say, that this estimating method will provide good estimates, since the empirical distribution converges in some sense to the probability distribution, making the values of parameters almost equal. But, better methods like maximum likelihood can be used in order to get more accurate results.
+
+<b>References:</b> <br>
+[Reference 1](https://online.stat.psu.edu/stat415/lesson/1/1.4#fullScreen) 
