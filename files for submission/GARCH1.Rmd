@@ -1,0 +1,393 @@
+---
+title: "GARCH model"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#if(!require(rugarch)) install.packages("rugarch")
+#if(!require(forecast)) install.packages("forecast")
+#if(!require(quantmod)) install.packages("quantmod")
+#if(!require(xlsx)) install.packages("xlsx")
+#if(!require(tseries)) install.packages("tseries")
+#if(!require(timeSeries)) install.packages("timeSeries")
+#if(!require(fGarch)) install.packages("fGarch")
+#install.packages("PerformanceAnalytics")
+#install.packages("FinTS")
+#install.packages("strucchange")
+#install.packages("TSA")
+suppressPackageStartupMessages(library(PerformanceAnalytics)) # calculating returns
+suppressPackageStartupMessages(library(FinTS)) # ARCH test
+suppressPackageStartupMessages(library(strucchange)) # structural changes
+suppressPackageStartupMessages(library(TSA)) # ARMA order identification
+library(rugarch)
+library(quantmod)
+library(forecast)
+library(tseries)
+library(timeSeries)
+library(dplyr)
+library(fGarch)
+library(lubridate)
+library(ggplot2)
+library(urca)
+library(lmtest)
+library(fBasics)
+```
+
+The Generalized Autoregressive Conditional Heteroskedasticity model have a fundation on making "Volatility clustering". This clustering of volatility is based on there are periods with relative calm movements and periods of high volatility. This behavior is very typical in the financial stock market data as we said and GARCH model is a very good approach to minimize the volatility effect.It is a model of order p,q, also known as GARCH(p,q).
+
+GARCH is used extensively within the financial industry as many asset prices are conditional heteroskedastic. 
+
+### Volatility ###
+The main motivation for studying conditional heteroskedasticity in finance is that of volatility of asset returns. Volatility is an incredibly important concept in finance because it is highly synonymous with risk.
+
+Volatility has a wide range of applications in finance:
+
+  *   Options Pricing - The Black-Scholes model for options prices is dependent upon the volatility of the underlying instrument
+  *   Risk Management - Volatility plays a role in calculating the VaR(Value at Risk) of a portfolio, the Sharpe Ratio for a trading strategy and in determination of leverage
+  *   Tradeable Securities - Volatility can now be traded directly by the introduction of the CBOE Volatility Index (VIX), and subsequent futures contracts and ETFs
+  
+Hence, if we can effectively forecast volatility then we will be able to price options more accurately, create more sophisticated risk management tools for our algorithmic trading portfolios and even come up with new strategies that trade volatility directly.
+
+### Heteroskedasticity ###
+In statistics, heteroskedasticity (or heteroscedasticity) happens when the standard deviations of a predicted variable, monitored over different values of an independent variable or as related to prior time periods, are non-constant. With heteroskedasticity, the tell-tale sign upon visual inspection of the residual errors is that they will tend to fan out over time, as depicted in the image below.
+
+Heteroskedasticity often arises in two forms: conditional and unconditional. Conditional heteroskedasticity identifies nonconstant volatility related to prior period's (e.g., daily) volatility. Unconditional heteroskedasticity refers to general structural changes in volatility that are not related to prior period volatility. Unconditional heteroskedasticity is used when future periods of high and low volatility can be identified.
+
+Heteroskedasticity refers to the error variance, or dependence of scattering, within a minimum of one independent variable within a particular sample. These variations can be used to calculate the margin of error between data sets, such as expected results and actual results, as it provides a measure of the deviation of data points from the mean value.
+
+In finance, conditional heteroskedasticity is often seen in the prices of stocks and bonds.A common application of conditional heteroskedasticity is to stock markets, where the volatility today is strongly related to volatility yesterday. This model explains periods of persistent high volatility and low volatility.
+
+
+## Autoregressive Conditional Heteroskedastic Model ##
+
+Autoregressive Conditional Heteroskedastic Model of Order Unity
+A time series ${\{ \epsilon_t \}}$ is given at each instance by: 
+$$
+\epsilon_t = \sigma_t w_t
+$$
+ 
+Where ${\{ w_t \}}$ is discrete white noise, with zero mean and unit variance, and ${\sigma^2_t}$ is given by:
+$$\sigma^2_t = \alpha_0 + \alpha_1 \epsilon^2_{t-1}$$
+ 
+Where $\alpha_0$ and $\alpha_1$ are parameters of the model.
+
+We say that $\{ \epsilon_t \}$ is an autoregressive conditional heteroskedastic model of order unity, denoted by ARCH(1). Substituting for ${\sigma^2_t}$, we receive:
+$$
+\epsilon_t = w_t \sqrt{\alpha_0 + \alpha_1 \epsilon_{t-1}^2}
+$$
+
+It is straightforward to extend ARCH to higher order lags. An ARCH(p) process is given by:
+$$
+\epsilon_t = w_t \sqrt{\alpha_0 + \sum^p_{i=1} \alpha_p \epsilon^2_{t-i}}
+$$
+
+## Generalised Autoregressive Conditional Heteroskedastic Models ##
+
+### Generalised Autoregressive Conditional Heteroskedastic Model of Order p, q ###
+A time series ${\{ \epsilon_t \}}$ is given at each instance by:
+$${\epsilon_t = \sigma_t w_t
+}$$
+ 
+Where ${\{ w_t \}}$ is discrete white noise, with zero mean and unit variance, and ${\sigma^2_t}$ is given by:
+$$
+\sigma^2_t = \alpha_0 + \sum^{q}_{i=1} \alpha_i \epsilon^2_{t-i} + \sum^{p}_{j=1} \beta_j \sigma^2_{t-j}
+$$
+ 
+ 
+Where ${\alpha_i}$ and ${\beta_j}$ are parameters of the model.
+
+We say that $\{ \epsilon_t \}$ is a generalised autoregressive conditional heteroskedastic model of order p,q, denoted by GARCH(p,q).
+
+Hence this definition is similar to that of ARCH(p), with the exception that we are adding moving average terms, that is the value of $\sigma^2$ at $t$ , ${\sigma^2_t}$, is dependent upon previous ${\sigma^2_{t-j}}$ values.
+
+Thus GARCH is the "ARMA equivalent" of ARCH, which only has an autoregressive component.
+
+
+Below is the Time Series Analysis of Dow Jones Industrial Averages from the 1/1/2000 to 12/10/2020.
+
+We have fetched the DJI data from the quantmod library provided by R using the function getSymbols(). The data comprises of OHLC(Open, High, Low, Close) index value, trade Volume and Adjusted close values.
+```{r Fetching Data }
+#Fetching Data
+suppressMessages(getSymbols("^DJI", from = "2000-01-01", to = "2020-12-10"))
+#head(DJI)
+#tail(DJI)
+```
+
+With the help of chartSeries function, we can show all the information provided in the data in a single frame.
+```{r}
+#chartseries
+chartSeries(DJI, type = "bars", theme="white")
+```
+
+
+Simple and log returns: 
+
+Simple returns are defined as:
+$$R_{t}\ :=\ \frac{P_{t}}{P_{t-1}}\ \ -\ 1$$
+
+Log returns are defined as:
+$$r_{t}\ :=\ ln\frac{P_{t}}{P_{t-1}}\ =\ ln(1+R_{t})$$
+
+Now, we calculate the log returns of Adjusted Close Values and plot a graph for it.
+```{r}
+
+dji_adjusted_close <- DJI[,"DJI.Adjusted"] #Adjusted close value.
+dji_log_return <- CalculateReturns(dji_adjusted_close, method = "log") #compute log returns
+dji_log_return <- na.omit(dji_log_return) #omit the NA values
+#head(dji_log_return)
+plot(dji_log_return)
+```
+
+Sharp increases and decreases in volatility can be eye-balled.
+
+
+Now, we will apply a function to convert the time series data to a dataframe with the columns for year and value.
+
+```{r Data Conversion}
+dji_return_df <- data.frame(year = factor(year(index(dji_log_return))), value = coredata(dji_log_return))
+colnames(dji_return_df) <- c( "year", "value")
+#head(dji_return_df)
+```
+
+The function below shows the basic statistics for the data stored as data frame columns. We use the basicStats function to get the row names for basic statictics that we will be showing.
+
+```{r Basic Statistcs}
+
+basic_stat<- rownames(basicStats(rnorm(10,0,1))) # gathering the basic stats dataframe output row names.
+result <- with(dji_return_df, tapply(value, year, basicStats))
+df_stat <- do.call(cbind, result)
+rownames(df_stat) <- basic_stat
+dji_stat <- as.data.frame(df_stat)
+dji_stat
+
+
+```
+We can see the Mean, Median, Mode, Minimum, Maximum, Sum, Skewness, Kurtosis, Variance , Standard Deviation and Quartile values for every year for the daily log returns data of Adjusted close values.
+
+Now, we plot the boxplot of daily log-returns based on years.
+
+```{r Box plot Daily returns} 
+
+boxplot <- ggplot(data = dji_return_df, aes(x = year, y = value)) + theme_bw() + theme(legend.position = "none") + geom_boxplot(fill = "gray") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Box Plots for DJIA daily log-returns from 2000 to 2020") + ylab("year")
+
+boxplot
+```
+Now, we plot the Density plot of daily log-returns based on years.
+
+```{r Density Plots daily returns}
+densityplot <- ggplot(data = dji_return_df, aes(x = value)) + geom_density(fill = "gray") + facet_wrap(. ~ year) + theme_bw() + theme(legend.position = "none") + ggtitle("Density Plots for DJIA daily log-returns from 2000 to 2020")
+densityplot 
+```
+
+Now, we plot the Quantile Quantile plot (QQ plot) of daily log-returns based on years.
+
+```{r QQ plots daily returns}
+qqplot <- ggplot(data = dji_return_df, aes(sample = value)) + stat_qq(colour = "gray") + stat_qq_line() + facet_wrap(. ~ year) + theme_bw() + theme(legend.position = "none") + ggtitle("QQ Plots for DJIA daily log-returns from 2000 to 2020")
+
+qqplot
+
+```
+
+
+Weekly Log Returns Analysis:
+
+The weekly log returns can be computed starting from the daily ones. Let us suppose to analyse the trading week on days {t-4, t-3, t-2, t-1, t} and to know closing price at day t-5 (last day of the previous week). We define the weekly log-return as:
+$$r_{t}^{w}\ :=\ ln \frac{P_{t}}{P_{t-5}}$$
+We convert the data available into weekly data and compute the basic statistics functions to 
+
+```{r Weekly log-returns}
+
+dji_weekly_return <- apply.weekly(dji_log_return, sum)
+plot(dji_weekly_return) #weekly log returns.
+
+
+dji_weekly_return_df <- data.frame(year = factor(year(index(dji_weekly_return))), value = coredata(dji_weekly_return))
+colnames(dji_weekly_return_df) <- c( "year", "value")
+#dim(dji_weekly_return_df) #shows the total number of weeks in the data
+#head(dji_weekly_return_df)
+
+```
+
+Plotting different plots for Weekly log-return data.
+```{r box plot weekly returns}
+
+boxplot <- ggplot(data = dji_weekly_return_df, aes(x = year, y = value)) + theme_bw() + theme(legend.position = "none") + geom_boxplot(fill = "gray") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Box Plots for DJIA weekly log-returns from 2000 to 2020") + ylab("year")
+
+boxplot
+```
+
+```{r denisty plot weekly returns}
+densityplot <- ggplot(data = dji_weekly_return_df, aes(x = value)) + geom_density(fill = "gray") + facet_wrap(. ~ year) + theme_bw() + theme(legend.position = "none") + ggtitle("Density Plots for DJIA weekly log-returns from 2000 to 2020")
+
+densityplot
+
+```
+
+```{r qq plot weekly returns}
+
+qqplot <- ggplot(data = dji_weekly_return_df, aes(sample = value)) + stat_qq(colour = "gray") + stat_qq_line() + facet_wrap(. ~ year) + theme_bw() + theme(legend.position = "none") + ggtitle("QQ Plots for DJIA weekly log-returns from 2000 to 2020")
+
+qqplot
+
+```
+
+## GARCH Model ##
+
+Now we will build a GARCH model for the daily returns of DJIA.
+
+### Outlier Detection ###
+The Return.clean function within Performance Analytics package is able to clean return time series from outliers. Here below we compare the original time series with the outliers adjusted one.
+
+```{r}
+#Outlier Detection by log-returns values.
+dji_return_outliersadj <- Return.clean(dji_log_return, "boudt")
+p <- plot(dji_log_return)
+p <- addSeries(dji_return_outliersadj, col = 'gray', on = 1)
+p
+```
+
+
+ACF plot:
+```{r}
+#ACF
+acf(dji_log_return)
+```
+
+
+PACF plot:
+```{r}
+#PACF
+pacf(dji_log_return)
+```
+
+Above correlation plots suggest some ARMA(p,q) model with p and q > 0. That will be verified within the prosecution of the present analysis.
+
+Now, we run the Augmented Dickey-Fuller unit root test using the urca package. The Augmented Dickey Fuller Test (ADF) is unit root test for stationarity. Unit roots can cause unpredictable results in your time series analysis. 
+
+```{r}
+#unit root tests
+(urdftest_lag = floor(12* (nrow(dji_log_return)/100)^0.25)) #number of lags with unit roots.
+summary(ur.df(dji_log_return, type = "none", lags = urdftest_lag, selectlags="BIC"))
+```
+Based on reported test statistics compared with critical values, we reject the null hypothesis of unit root presence.
+
+
+Now, we will be using ARMA(2,2) + GARCH(1,1) model in order to forecast our predictions. Here ARMA model is the mean model and GARCH is the variance model. 
+
+(We select the values of p,q for the above models based on the statistical significance of all the coefficients calculated by these models using different values of p and q.)
+```{r }
+
+#ARMA-GARCH: ARMA(2,2) + GARCH(1,1)
+
+garchspec <- ugarchspec(mean.model = list(armaOrder = c(2,2)), variance.model = list( garchOrder = c(1, 1)),distribution.model = "sstd") #defining model
+
+(garchfit <- ugarchfit(data = dji_adjusted_close, spec = garchspec, out.sample = 40)) #estimate model for daily close price.
+#garchfit
+
+garchforecast <- ugarchforecast(garchfit, n.ahead = 40, n.roll = 30) 
+garchforecast #forecast values
+plot(garchforecast) #plot forecasted values
+```
+
+We will now calculate the normal residuals and then square them using the log-return data.By doing this residuals plots, any volatile values will visually appear. We try to apply a standard GARCH(1,1) model over ARMA(2,2), looking if we have improved our accuracy and model parameters. 
+
+```{r log returns model}
+garchfit2=ugarchfit(spec=garchspec, data=dji_log_return,  out.sample = 40)
+```
+
+Note that the volatility is the square root of the conditional variance.
+```{r residuals}
+res <- garchfit2@fit$residuals #stroing estimated normal residuals 
+plot(res)
+
+var <- garchfit2@fit$var #storing estimated variance 
+res2 <- (res)^2 # calculating square of residuals
+
+plot(res2) #plotting square of residuals
+lines(var, col = "gray")
+
+```
+
+The above plots show the residual plots.The first graph is the residual plot with normal residuals after fitting the model. The second plot is plot  of the squared residuals and the estimated conditional variance
+
+
+
+Now, we forecast the log-return values using the model garchfit2 for next 30 days.
+```{r}
+#GARCH Forecasting
+garchforecast <- ugarchforecast(garchfit2, n.ahead = 30 )
+garchforecast
+
+```
+
+
+Below are some diagnostic plots for our model working on log-returns data.
+```{r diagnostic plots for }
+#plots
+par(mfrow=c(2,2))
+plot(garchfit2, which=8)
+plot(garchfit2, which=9)
+plot(garchfit2, which=10)
+plot(garchfit2, which=11)
+```
+
+Now, we show the original DJIA adjusted close price time series with the mean model fit (red line).
+
+```{r adjusted close time series}
+par(mfrow=c(1,1))
+cond_volatility <- sigma(garchfit)
+mean_model_fit <- fitted(garchfit)
+p <- plot(dji_adjusted_close, col = "gray")
+p <- addSeries(mean_model_fit, col = 'red', on = 1)
+#p <- addSeries(cond_volatility, col = 'red', on = 1)
+p
+```
+
+
+Here is the plot showing the original DJIA log-returns time series with the mean model fit (red line) and the conditional volatility (blue line).
+```{r log return time series}
+
+par(mfrow=c(1,1))
+cond_volatility <- sigma(garchfit2)
+mean_model_fit <- fitted(garchfit2)
+p <- plot(dji_log_return, col = "grey")
+p <- addSeries(mean_model_fit, col = 'red', on = 1)
+p <- addSeries(cond_volatility, col = 'blue', on = 1)
+p
+
+```
+
+
+Below is the plot of conditional volatility as a result of our GARCH model on log-returns.
+```{r}
+#Conditional Volatility Analysis
+
+plot(cond_volatility)
+```
+
+Line plots of conditional volatility by year are shown.
+```{r}
+
+par(mfrow=c(1,1))
+pl <- lapply(2000:2020, function(x) { plot(cond_volatility[as.character(x)], main = "DJIA Daily Log returns conditional volatility")})
+pl
+```
+
+Box Plots of conditional volatility by year are shown.
+```{r}
+
+par(mfrow=c(1,1))
+
+cond_volatility_df <- data.frame(year = factor(year(index(cond_volatility))), value = coredata(cond_volatility))
+colnames(cond_volatility_df) <- c( "year", "value")
+
+boxplot <- ggplot(data = cond_volatility_df, aes(x = year, y = value)) + theme_bw() + theme(legend.position = "none") + geom_boxplot(fill = "gray") + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle("Box Plots for DJIA conditional volatility from 2000 to 2020") + ylab("year")
+
+boxplot
+```
+
